@@ -8,6 +8,8 @@ from utils.tornado_utils import parse_header
 
 class _FormDataPart:
     def __init__(self, header, files_path):
+        if header.startswith(b'\r\n'):
+            header = header[2:]
         header_str = header.decode('utf-8')
         if '\r\n' in header_str:
             header_str = header_str[:header_str.index('\r\n')]
@@ -82,7 +84,10 @@ class StreamingFormReader:
                     break
 
                 if not self._buffer.startswith(self._boundary):
-                    raise Exception('Invalid buffer format: ' + str(self._buffer))
+                    if self._buffer.startswith(b'\r\n'):
+                        self._buffer = self._buffer[2:]
+                    else:
+                        raise Exception('Invalid buffer format: ' + str(self._buffer))
 
                 part = self._buffer[len(self._fields_separator):]
 
